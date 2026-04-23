@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XYRanWord - Random Word Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="./assets/index-C7V2q6HQ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-xSghTvxI.css">
+  </head>
+  <body class="font-['Outfit']">
+    <div id="app" class="relative w-full min-h-screen flex flex-col items-center justify-center p-4">
+      
+      <!-- Initialization Overlay -->
+      <div id="init-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay backdrop-blur-xl transition-colors duration-500 p-4">
+        <div class="glass-card p-8 md:p-10 rounded-3xl w-full max-w-md text-center space-y-6 animate-in fade-in zoom-in duration-500">
+          <h1 class="text-4xl font-extrabold bg-gradient-to-br from-primary to-blue-500 bg-clip-text text-transparent">XYRanWord</h1>
+          <p class="opacity-60" data-i18n="init_msg">Please import your <code class="text-primary font-bold">data.db</code> to begin.</p>
+          <div class="relative group">
+            <input type="file" id="db-upload" accept=".db" class="hidden" />
+            <label for="db-upload" class="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-primary/20 rounded-2xl cursor-pointer hover:border-primary hover:bg-primary/5 transition-all duration-300">
+              <svg class="w-10 h-10 mb-3 opacity-50 group-hover:text-primary group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              <span class="text-sm opacity-50 group-hover:opacity-100 font-medium" data-i18n="upload_btn">Click to upload data.db</span>
+            </label>
+          </div>
+          <p class="text-xs opacity-50 font-medium"><span data-i18n="no_db">Don't have one?</span> <button id="create-db" class="text-primary hover:underline font-bold" data-i18n="create_db">Create a new database</button></p>
+        </div>
+      </div>
+
+      <!-- Main UI -->
+      <main id="main-content" class="hidden w-full max-w-6xl p-2 md:p-8 flex flex-col lg:grid lg:grid-cols-12 gap-8 opacity-0 transition-opacity duration-1000">
+        
+        <!-- Left: XY Weighting Map -->
+        <div class="lg:col-span-7 w-full flex flex-col space-y-4 min-h-[400px] md:min-h-[500px]">
+          <div class="flex items-center justify-between px-2">
+            <h2 class="text-xl font-bold opacity-40" data-i18n="map_header">Weighting Map</h2>
+            <div id="active-category" class="text-[10px] md:text-xs font-mono px-3 py-1 bg-primary/10 text-primary rounded-full border border-primary/20 font-bold" data-i18n="neutral_balance">Neutral Balance</div>
+          </div>
+          <div id="xy-map-container" class="relative flex-grow glass-card rounded-[2rem] overflow-hidden cursor-crosshair w-full aspect-square md:aspect-auto">
+            <canvas id="xy-map" class="w-full h-full"></canvas>
+            <div id="focus-ring" class="absolute pointer-events-none w-10 h-10 md:w-12 md:h-12 border-2 border-primary rounded-full flex items-center justify-center">
+              <div class="w-2 h-2 bg-primary rounded-full animate-ping"></div>
+            </div>
+          </div>
+          <p class="text-[10px] md:text-sm opacity-30 italic text-center" data-i18n="map_instr">Drag nodes to influence categories.</p>
+        </div>
+
+        <!-- Right: Word Display & Controls -->
+        <div class="lg:col-span-5 flex flex-col space-y-8 justify-center py-4">
+          
+          <div class="text-center space-y-4">
+            <div id="current-category" class="text-primary text-xs md:text-sm font-bold tracking-widest uppercase" data-i18n="sel_cat">Select Category</div>
+            <h1 id="word-display" class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter drop-shadow-xl break-words px-2">...</h1>
+            <div class="flex items-center justify-center">
+              <button id="translate-btn" class="glass px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-primary/10 transition-all flex items-center space-x-2 font-bold">
+                <span data-i18n="translate">Translate</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5l3.096-3.096m0 0L17 13m-3.856-3.856L9 15.144M15 19.144l-6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-4 md:space-y-6">
+            <button id="generate-btn" class="w-full py-5 md:py-6 rounded-[2rem] bg-gradient-to-r from-primary to-blue-600 text-white text-xl md:text-2xl font-black shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 active:scale-95 transition-all duration-300" data-i18n="gen_btn">
+              GENERATE WORD
+            </button>
+            
+            <div class="grid grid-cols-2 gap-3 md:gap-4">
+              <button id="open-settings" class="glass py-3 md:py-4 rounded-2xl hover:bg-primary/5 transition-all font-bold text-sm md:text-base" data-i18n="settings">Settings</button>
+              <button id="export-db" class="glass py-3 md:py-4 rounded-2xl hover:bg-primary/5 transition-all text-primary font-bold border-primary/20 text-sm md:text-base" data-i18n="export">Export .db</button>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-bg-overlay backdrop-blur-md p-4 transition-colors duration-500 overflow-y-auto">
+        <div class="glass-card p-6 md:p-8 rounded-3xl w-full max-w-2xl my-auto space-y-6 md:space-y-8 animate-in slide-in-from-bottom duration-300 custom-scrollbar">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl md:text-3xl font-black" data-i18n="pref_title">Preferences</h2>
+            <button id="close-settings" class="p-2 hover:bg-primary/10 rounded-full text-2xl font-bold transition-all">&times;</button>
+          </div>
+
+          <!-- Language -->
+          <section class="space-y-4">
+            <h3 class="text-base md:text-lg font-bold text-primary" data-i18n="language">Language</h3>
+            <div class="flex gap-2">
+              <button data-lang="en" class="lang-btn glass px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary/10 transition-all">English</button>
+              <button data-lang="jp" class="lang-btn glass px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary/10 transition-all">日本語</button>
+              <button data-lang="th" class="lang-btn glass px-4 py-2 rounded-xl text-xs font-bold hover:bg-primary/10 transition-all">ไทย</button>
+            </div>
+          </section>
+
+          <!-- Appearance -->
+          <section class="space-y-4 border-t border-slate-500/20 pt-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base md:text-lg font-bold text-primary" data-i18n="appearance">Appearance</h3>
+              <button id="toggle-mode" class="glass px-3 py-1 rounded-full text-[8px] md:text-[10px] uppercase tracking-widest font-black hover:bg-primary/10 transition-all" data-i18n="toggle_mode">Toggle Mode</button>
+            </div>
+            <div class="flex flex-wrap gap-2 md:gap-3">
+              <button data-theme="indigo" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#3b82f6] border-2 border-white/20 theme-btn active shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="rose" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#f43f5e] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="emerald" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#10b981] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="amber" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#f59e0b] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="cyan" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#06b6d4] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="violet" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#8b5cf6] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+              <button data-theme="orange" class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-[#f97316] border-2 border-white/20 theme-btn shadow-sm transition-transform hover:scale-110"></button>
+            </div>
+          </section>
+
+          <section class="space-y-3 md:space-y-4 border-t border-slate-500/20 pt-4">
+            <h3 class="text-base md:text-lg font-bold text-primary" data-i18n="manage_words">Manage Words</h3>
+            <div class="relative">
+              <input type="text" id="word-search" class="w-full glass border-none rounded-xl px-4 py-2 md:py-3 text-xs md:text-sm mb-2 focus:ring-2 focus:ring-primary outline-none transition-all" data-i18n-placeholder="search" placeholder="Search..." />
+              <div id="word-list" class="max-h-40 md:max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                <!-- Words injected here -->
+              </div>
+            </div>
+          </section>
+
+          <section class="space-y-3 md:space-y-4 pt-4 border-t border-slate-500/20">
+            <h3 class="text-base md:text-lg font-bold text-primary" data-i18n="bulk_import">Bulk Import</h3>
+            <textarea id="json-input" class="w-full h-24 md:h-32 glass border-none rounded-xl p-4 font-mono text-[10px] md:text-xs focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="Paste JSON here..."></textarea>
+            <button id="import-json" class="w-full py-3 md:py-4 bg-primary text-white rounded-xl font-black hover:brightness-110 active:scale-95 transition-all text-sm" data-i18n="import_btn">Import Words</button>
+          </section>
+
+          <section class="space-y-3 md:space-y-4 pt-4 border-t border-slate-500/20">
+            <h3 class="text-base md:text-lg font-bold text-primary text-sm" data-i18n="ai_schema">AI Prompt Schema</h3>
+            <pre id="ai-schema" class="glass border-none p-3 md:p-4 rounded-xl font-mono text-[8px] md:text-[10px] text-primary overflow-x-auto whitespace-pre-wrap opacity-80"></pre>
+          </section>
+
+          <div class="pt-4 md:pt-6 border-t border-slate-500/20 flex justify-end">
+            <button id="reset-db" class="text-red-500 text-[10px] font-black uppercase tracking-widest hover:underline transition-all" data-i18n="wipe_db">Wipe Database</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </body>
+</html>
