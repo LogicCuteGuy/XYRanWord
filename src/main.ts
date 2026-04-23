@@ -133,7 +133,7 @@ async function init() {
   try {
     SQL = await initSqlJs({
       locateFile: file => {
-        const path = `/${file}`;
+        const path = `${import.meta.env.BASE_URL}${file}`;
         console.log('SQL.js loading:', path);
         return path;
       }
